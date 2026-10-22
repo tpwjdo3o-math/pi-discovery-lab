@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>원의 비밀 숫자 탐구실</title>
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#243042;--sub:#687386;--blue:#3b82f6;--blue-dark:#1d4ed8;--blue-soft:#dbeafe;--orange:#f59e0b;--green:#10b981;--green-dark:#047857;--purple:#7c3aed;--red:#ef4444;--line:#dce3ec;--shadow:0 10px 30px rgba(30,41,59,.08)}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}button,input{font-family:inherit}.app{width:min(1180px,calc(100% - 16px));margin:auto;padding:16px 0 48px}.header{background:linear-gradient(135deg,#fff,#eff6ff);border:1px solid #e2e8f0;border-radius:24px;padding:22px 26px;box-shadow:var(--shadow);margin-bottom:14px}.eyebrow{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--blue-soft);color:var(--blue-dark);font-size:13px;font-weight:900;margin-bottom:8px}h1{margin:0;font-size:clamp(27px,4vw,40px)}.header p{margin:9px 0 0;color:var(--sub);line-height:1.65}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}.step{background:#fff;border:1px solid var(--line);border-radius:14px;min-height:52px;display:flex;align-items:center;justify-content:center;text-align:center;color:#94a3b8;font-size:12px;font-weight:900;padding:5px}.step.active{background:var(--blue-soft);border-color:#93c5fd;color:var(--blue-dark)}.step.done{background:#ecfdf5;border-color:#a7f3d0;color:#047857}.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(290px,.72fr);gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}.visual{padding:16px;min-width:0}.controls{padding:19px}.visual-title{font-weight:900;color:#475569;margin-bottom:5px}.visual-sub{font-size:13px;color:#7a8597;line-height:1.55;margin-bottom:8px;min-height:40px}.geometry-scroller{width:100%;min-height:500px;overflow-x:auto;overflow-y:hidden;display:flex;align-items:center;justify-content:flex-start;padding:10px 0 18px;scrollbar-width:thin}.geometry-scroller.centered{justify-content:center}.geometry-svg{display:block;flex:0 0 auto;max-width:none!important;height:auto!important}.circle-main{fill:#f8fbff;stroke:#334155;stroke-width:3}.circle-circ{fill:none;stroke:var(--orange);stroke-width:8}.center-dot{fill:#1e293b}.radius-line{stroke:var(--blue);stroke-width:4;stroke-linecap:round}.diameter-line{stroke:var(--purple);stroke-width:4;stroke-linecap:round}.label{font-size:16px;font-weight:900;paint-order:stroke;stroke:#fff;stroke-width:5px}.cut{stroke:var(--red);stroke-width:3;stroke-dasharray:5 4}.scissors{font-size:34px;transform-box:fill-box;transform-origin:center}.circ-line{stroke:var(--orange);stroke-width:10;stroke-linecap:round}.diam-stick{stroke:#64748b;stroke-width:13;stroke-linecap:butt}.remain{stroke:#cbd5e1;stroke-width:13;stroke-linecap:butt}.svg-label{font-size:14px;font-weight:800;fill:#64748b}.svg-title{font-size:18px;font-weight:900;fill:#334155}.section{padding-bottom:17px;margin-bottom:17px;border-bottom:1px solid #edf1f5}.section:last-child{border:0;margin:0;padding:0}.section-title{font-size:14px;font-weight:900;color:#475569;margin-bottom:9px}.picker{display:grid;grid-template-columns:48px 1fr 48px;gap:8px}.pm{border:0;border-radius:13px;background:#eef2ff;color:#4338ca;font-size:24px;font-weight:900;cursor:pointer}.pm:disabled{opacity:.35}.input-wrap{min-height:48px;border:1px solid #cbd5e1;border-radius:13px;display:flex;justify-content:center;align-items:center;gap:5px}.rinput{width:80px;border:0;outline:0;text-align:right;font-size:21px;font-weight:900}.unit{color:#64748b;font-weight:800;font-size:14px}.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.preset{min-height:37px;border:1px solid #dbe3ed;background:#fff;border-radius:10px;font-size:12px;font-weight:900;color:#64748b;cursor:pointer}.btn{width:100%;min-height:49px;border:0;border-radius:14px;font-weight:900;cursor:pointer}.btn:disabled{opacity:.4;cursor:not-allowed}.orange{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff}.purple{background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:#fff}.blue{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff}.green{background:linear-gradient(135deg,#059669,#10b981);color:#fff}.soft{background:#f1f5f9;color:#334155}.info{margin-top:9px;padding:11px 12px;border-radius:13px;background:#f8fafc;border:1px solid #e2e8f0;color:#5f6b7c;font-size:13px;line-height:1.6}.measure,.ratio{display:none;margin-top:9px;padding:12px 13px;border-radius:14px}.measure.show,.ratio.show{display:block}.measure{background:#eff6ff;border:1px solid #bfdbfe}.row{display:flex;justify-content:space-between;gap:8px;line-height:1.8}.ratio{background:#ecfdf5;border:1px solid #a7f3d0;text-align:center}.ratio .big{font-size:31px;font-weight:900;color:var(--green-dark)}.results{margin-top:15px;padding:20px}.results h2{margin:0 0 4px;font-size:21px}.results p{margin:0 0 12px;color:#7a8597;font-size:13px}.table-wrap{overflow-x:auto}table{width:100%;min-width:620px;border-collapse:collapse}th,td{text-align:center;padding:11px;border-bottom:1px solid #e2e8f0;font-size:14px}th{background:#f8fafc;color:#475569}.ratio-cell{font-weight:900;color:#047857}.discovery{display:none;margin-top:13px;padding:14px 15px;border-radius:15px;background:#eefbf5;border:1px solid #a7f3d0}.discovery.show{display:block}.warn{display:none;margin-top:8px;padding:9px 10px;border-radius:11px;background:#fff7ed;border:1px solid #fed7aa;color:#9a5b17;font-size:12px}.warn.show{display:block}@media(max-width:820px){.layout{grid-template-columns:1fr}}@media(max-width:540px){.app{width:calc(100% - 10px);padding-top:6px}.header{padding:17px;border-radius:19px}.step span{display:none}.visual,.controls,.results{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header"><div class="eyebrow">🔍 원 속에 숨은 숫자를 찾아라</div><h1>원의 비밀 숫자 탐구실</h1><p>반지름을 정하고 원의 둘레를 펼친 뒤, 같은 원의 지름을 하나씩 놓아 보세요.</p></header>
+<div class="steps"><div class="step active" id="s1">① <span>반지름 선택</span></div><div class="step" id="s2">② <span>원주 펼치기</span></div><div class="step" id="s3">③ <span>지름 놓기</span></div><div class="step" id="s4">④ <span>길이 확인</span></div><div class="step" id="s5">⑤ <span>비율 계산</span></div></div>
+<div class="layout">
+<section class="card visual">
+<div class="visual-title" id="vTitle">① 반지름을 선택하세요.</div>
+<div class="visual-sub" id="vSub">원의 지름과 펼친 원주는 같은 화면 배율로 표시됩니다.</div>
+<div class="geometry-scroller centered" id="circleScroller">
+<svg id="circleSvg" class="geometry-svg" width="560" height="560" viewBox="0 0 560 560">
+<circle id="circle" class="circle-main" cx="280" cy="280" r="80"></circle>
+<circle id="circ" class="circle-circ" cx="280" cy="280" r="80"></circle>
+<line id="diameter" class="diameter-line"></line>
+<line id="radiusLine" class="radius-line"></line>
+<circle cx="280" cy="280" r="6" class="center-dot"></circle>
+<text id="radiusLabel" class="label" fill="#2563eb" text-anchor="middle"></text>
+<text id="diamLabel" class="label" fill="#7c3aed" text-anchor="middle">지름</text>
+<line id="cutMark" class="cut"></line><text id="scissors" class="scissors">✂️</text>
+</svg>
+</div>
+<div class="geometry-scroller" id="unrollScroller" style="display:none;"><svg id="unrollSvg" class="geometry-svg" height="390"></svg></div>
+<div id="scaleNote" style="display:none;margin-top:8px;font-size:12px;color:#64748b">※ 원·지름·원주는 모두 <b>1 cm = 16 px</b>의 동일한 배율입니다. 긴 원주는 좌우로 이동해 보세요.</div>
+</section>
+<aside class="card controls">
+<div class="section"><div class="section-title">① 반지름 선택</div><div class="picker"><button class="pm" id="minus">−</button><div class="input-wrap"><input class="rinput" id="radiusInput" type="number" min="1" max="15" step="0.1" value="5.0"><span class="unit">cm</span></div><button class="pm" id="plus">＋</button></div><div class="presets"><button class="preset" data-r="3">3.0</button><button class="preset" data-r="5">5.0</button><button class="preset" data-r="10">10.0</button><button class="preset" data-r="15">15.0</button></div><div class="warn" id="repeatWarn">💡 이미 탐구한 반지름이에요. 다른 크기도 탐구해 보세요.</div></div>
+<div class="section"><div class="section-title">② 원의 둘레 펼치기</div><button class="btn orange" id="cutBtn">✂️ 원의 둘레를 잘라 펼쳐보기</button></div>
+<div class="section"><div class="section-title">③ 지름 놓기</div><button class="btn purple" id="placeBtn" disabled>＋ 지름 하나 놓기</button><div class="info" id="stickInfo">먼저 원의 둘레를 펼쳐 보세요.</div></div>
+<div class="section"><div class="section-title">④ 길이 확인</div><button class="btn blue" id="measureBtn" disabled>📏 길이 확인하기</button><div class="measure" id="measureBox"><div class="row"><span>반지름</span><b id="rv"></b></div><div class="row"><span>지름</span><b id="dv"></b></div><div class="row"><span>원의 둘레</span><b id="cv"></b></div></div></div>
+<div class="section"><div class="section-title">⑤ 원의 둘레 ÷ 지름</div><button class="btn green" id="ratioBtn" disabled>원의 둘레 ÷ 지름 계산하기</button><div class="ratio" id="ratioBox"><div id="ratioFormula"></div><div class="big" id="ratioResult"></div></div><button class="btn soft" id="againBtn" style="margin-top:8px;">↺ 새로운 반지름으로 다시 탐구</button></div>
+</aside></div>
+<section class="card results"><h2>나의 탐구 결과</h2><p>비율 계산을 마치면 결과가 자동으로 기록됩니다.</p><div class="table-wrap"><table><thead><tr><th>실험</th><th>반지름</th><th>지름</th><th>원의 둘레</th><th>원주 ÷ 지름</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="color:#94a3b8;padding:22px">아직 기록이 없습니다.</td></tr></tbody></table></div><div class="discovery" id="discovery"><b>🔍 서로 다른 세 원의 결과를 비교해 보세요.</b><br>원의 크기는 달라졌는데 어떤 값이 비슷한가요?</div></section>
+</div>
+<script>
+(() => {
+const NS='http://www.w3.org/2000/svg', PX=16, MIN_R=1, MAX_R=15, CX=280, CY=280;
+let r=5, stage=1, sticks=0, measured=false, recorded=false, records=[];
+const $=id=>document.getElementById(id);
+const clamp=n=>Math.round(Math.min(MAX_R,Math.max(MIN_R,Number(n)||r))*10)/10;
+const dCm=()=>Math.round(2*r*10)/10;
+const cTrue=()=>2*Math.PI*r;
+const cShown=()=>Math.round(cTrue()*10)/10;
+const ratio=()=>cShown()/dCm();
+
+function updateSteps(){for(let i=1;i<=5;i++){const e=$('s'+i);e.classList.remove('active','done');if(i<stage)e.classList.add('done');if(i===stage)e.classList.add('active')}}
+function drawCircle(){
+const rp=r*PX;
+$('circle').setAttribute('r',rp);$('circ').setAttribute('r',rp);
+$('diameter').setAttribute('x1',CX-rp);$('diameter').setAttribute('y1',CY);$('diameter').setAttribute('x2',CX+rp);$('diameter').setAttribute('y2',CY);
+const a=-35*Math.PI/180,rx=CX+rp*Math.cos(a),ry=CY+rp*Math.sin(a);
+$('radiusLine').setAttribute('x1',CX);$('radiusLine').setAttribute('y1',CY);$('radiusLine').setAttribute('x2',rx);$('radiusLine').setAttribute('y2',ry);
+const lr=Math.max(45,rp*.58);$('radiusLabel').setAttribute('x',CX+lr*Math.cos(a));$('radiusLabel').setAttribute('y',CY+lr*Math.sin(a)-7);$('radiusLabel').textContent=`반지름 ${r.toFixed(1)} cm`;
+$('diamLabel').setAttribute('x',CX);$('diamLabel').setAttribute('y',CY+28);
+const ca=-55*Math.PI/180,x=CX+rp*Math.cos(ca),y=CY+rp*Math.sin(ca);$('cutMark').setAttribute('x1',x-10);$('cutMark').setAttribute('y1',y-10);$('cutMark').setAttribute('x2',x+10);$('cutMark').setAttribute('y2',y+10);$('scissors').setAttribute('x',x+10);$('scissors').setAttribute('y',y-8);
+$('vSub').textContent=`반지름 ${r.toFixed(1)} cm의 원입니다.`;
+}
+function setR(v){if(stage!==1)return;r=clamp(v);$('radiusInput').value=r.toFixed(1);$('minus').disabled=r<=MIN_R;$('plus').disabled=r>=MAX_R;drawCircle();$('repeatWarn').classList.toggle('show',records.some(x=>x.r.toFixed(1)===r.toFixed(1)))}
+function lockRadius(lock){$('radiusInput').disabled=lock;$('minus').disabled=lock||r<=MIN_R;$('plus').disabled=lock||r>=MAX_R;document.querySelectorAll('.preset').forEach(b=>b.disabled=lock)}
+function drawUnroll(){
+const cPx=cTrue()*PX,dPx=dCm()*PX,pad=60,w=Math.max(560,Math.ceil(cPx+pad*2)),h=390,svg=$('unrollSvg');svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.style.width=w+'px';svg.innerHTML='';
+const start=(w-cPx)/2,end=start+cPx;
+let t=document.createElementNS(NS,'text');t.setAttribute('x',w/2);t.setAttribute('y',65);t.setAttribute('text-anchor','middle');t.setAttribute('class','svg-title');t.textContent='펼친 원의 둘레';svg.appendChild(t);
+let l=document.createElementNS(NS,'line');l.setAttribute('x1',start);l.setAttribute('y1',125);l.setAttribute('x2',end);l.setAttribute('y2',125);l.setAttribute('class','circ-line');svg.appendChild(l);
+console.assert(Math.abs(dPx-cPx/Math.PI)<0.001);
+for(let i=0;i<sticks;i++){let s=document.createElementNS(NS,'line');s.setAttribute('x1',start+i*dPx);s.setAttribute('y1',245);s.setAttribute('x2',start+(i+1)*dPx);s.setAttribute('y2',245);s.setAttribute('class','diam-stick');svg.appendChild(s);let lab=document.createElementNS(NS,'text');lab.setAttribute('x',start+(i+.5)*dPx);lab.setAttribute('y',278);lab.setAttribute('text-anchor','middle');lab.setAttribute('class','svg-label');lab.textContent=`지름 ${dCm().toFixed(1)} cm`;svg.appendChild(lab)}
+if(sticks>=3){const rs=start+3*dPx;let rem=document.createElementNS(NS,'line');rem.setAttribute('x1',rs);rem.setAttribute('y1',245);rem.setAttribute('x2',end);rem.setAttribute('y2',245);rem.setAttribute('class','remain');svg.appendChild(rem);let tx=document.createElementNS(NS,'text');tx.setAttribute('x',(rs+end)/2);tx.setAttribute('y',330);tx.setAttribute('text-anchor','middle');tx.setAttribute('class','svg-label');tx.textContent='3개의 지름 뒤에 조금 남는 부분';svg.appendChild(tx)}
+requestAnimationFrame(()=>{$('unrollScroller').scrollLeft=Math.max(0,(w-$('unrollScroller').clientWidth)/2)});
+}
+function renderRecords(){const tb=$('tbody');if(!records.length)tb.innerHTML='<tr><td colspan="5" style="color:#94a3b8;padding:22px">아직 기록이 없습니다.</td></tr>';else tb.innerHTML=records.map((x,i)=>`<tr><td>${i+1}</td><td>${x.r.toFixed(1)} cm</td><td>${x.d.toFixed(1)} cm</td><td>${x.c.toFixed(1)} cm</td><td class="ratio-cell">${x.q.toFixed(3)}</td></tr>`).join('');$('discovery').classList.toggle('show',new Set(records.map(x=>x.r.toFixed(1))).size>=3)}
+function resetOne(){stage=1;sticks=0;measured=false;recorded=false;$('circleScroller').style.display='flex';$('unrollScroller').style.display='none';$('scaleNote').style.display='none';lockRadius(false);$('cutBtn').disabled=false;$('placeBtn').disabled=true;$('measureBtn').disabled=true;$('ratioBtn').disabled=true;$('measureBox').classList.remove('show');$('ratioBox').classList.remove('show');$('stickInfo').textContent='먼저 원의 둘레를 펼쳐 보세요.';$('vTitle').textContent='① 반지름을 선택하세요.';drawCircle();updateSteps();setR(r)}
+$('minus').onclick=()=>setR(r-.1);$('plus').onclick=()=>setR(r+.1);$('radiusInput').onchange=()=>setR($('radiusInput').value);document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>setR(Number(b.dataset.r)));
+$('cutBtn').onclick=()=>{if(stage!==1)return;lockRadius(true);$('cutBtn').disabled=true;stage=2;updateSteps();$('circleScroller').style.display='none';$('unrollScroller').style.display='flex';$('scaleNote').style.display='block';drawUnroll();$('placeBtn').disabled=false;$('vTitle').textContent='② 원의 둘레를 그대로 펼쳤습니다.';$('vSub').textContent='같은 원의 지름을 하나씩 놓아 보세요.';$('stickInfo').innerHTML='<b>지름 하나의 길이는 원에서 보았던 지름과 정확히 같은 배율입니다.</b>'};
+$('placeBtn').onclick=()=>{if(sticks>=3)return;sticks++;stage=3;updateSteps();drawUnroll();$('stickInfo').innerHTML=`<b>지름 ${sticks}개</b>를 놓았습니다.`;if(sticks===3){$('placeBtn').disabled=true;$('measureBtn').disabled=false;$('stickInfo').innerHTML='<b>지름 3개</b>를 놓았는데도 조금 남았습니다.';$('vTitle').textContent='③ 원의 둘레는 지름 3개보다 조금 더 깁니다.'}};
+$('measureBtn').onclick=()=>{measured=true;stage=4;updateSteps();$('rv').textContent=r.toFixed(1)+' cm';$('dv').textContent=dCm().toFixed(1)+' cm';$('cv').textContent=cShown().toFixed(1)+' cm';$('measureBox').classList.add('show');$('measureBtn').disabled=true;$('ratioBtn').disabled=false};
+$('ratioBtn').onclick=()=>{if(!measured)return;stage=5;updateSteps();$('ratioFormula').textContent=`${cShown().toFixed(1)} ÷ ${dCm().toFixed(1)}`;$('ratioResult').textContent=ratio().toFixed(3);$('ratioBox').classList.add('show');$('ratioBtn').disabled=true;if(!recorded){records.push({r:r,d:dCm(),c:cShown(),q:ratio()});recorded=true;renderRecords()}};
+$('againBtn').onclick=resetOne;
+setR(5);updateSteps();renderRecords();
+})();
+</script>
+</body>
+</html>
