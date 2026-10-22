@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원의 비밀 숫자 탐구실</title>
+
+  <style>
+    :root {
+      --bg:#f6f8fc; --card:#ffffff; --text:#243042; --sub:#687386;
+      --blue:#3b82f6; --blue-dark:#1d4ed8; --blue-soft:#dbeafe;
+      --orange:#f59e0b; --orange-soft:#fff7ed; --green:#10b981;
+      --green-dark:#047857; --purple:#7c3aed; --line:#dce3ec;
+      --red:#ef4444; --shadow:0 10px 30px rgba(30,41,59,.08);
+    }
+
+    * { box-sizing:border-box; }
+    html,body { margin:0; padding:0; min-height:100%; background:var(--bg); color:var(--text); font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+    button,input { font-family:inherit; }
+    body { overflow-x:hidden; }
+    .app { width:min(1180px, calc(100% - 18px)); margin:0 auto; padding:18px 0 50px; }
+
+    .header { background:linear-gradient(135deg,#fff 0%,#eff6ff 55%,#f5f3ff 100%); border:1px solid #e2e8f0; border-radius:26px; padding:24px 28px; box-shadow:var(--shadow); margin-bottom:15px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:6px; padding:7px 11px; border-radius:999px; background:var(--blue-soft); color:var(--blue-dark); font-size:13px; font-weight:900; margin-bottom:10px; }
+    h1 { margin:0; font-size:clamp(27px,4vw,42px); line-height:1.15; letter-spacing:-1.4px; }
+    .header p { margin:11px 0 0; color:var(--sub); line-height:1.7; font-size:15px; }
+
+    .step-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; margin-bottom:14px; }
+    .step-item { min-height:54px; padding:8px 6px; border-radius:15px; border:1px solid var(--line); background:#fff; color:#94a3b8; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:800; }
+    .step-item b { font-size:14px; margin-bottom:2px; }
+    .step-item.active { background:var(--blue-soft); border-color:#93c5fd; color:var(--blue-dark); }
+    .step-item.done { background:#ecfdf5; border-color:#a7f3d0; color:#047857; }
+
+    .grid { display:grid; grid-template-columns:minmax(0,1.42fr) minmax(300px,.72fr); gap:15px; align-items:stretch; }
+    .visual-card,.control-card,.results-card { background:var(--card); border:1px solid var(--line); border-radius:23px; box-shadow:var(--shadow); }
+    .visual-card { min-height:610px; padding:17px; display:flex; flex-direction:column; min-width:0; }
+    .control-card { padding:20px; }
+    .visual-title { font-size:15px; font-weight:900; color:#475569; margin-bottom:5px; }
+    .visual-subtitle { min-height:42px; font-size:13px; line-height:1.55; color:#7a8597; margin-bottom:7px; }
+
+    .circle-workspace { min-height:500px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #circleSvg { width:100%; max-width:650px; height:auto; display:block; }
+    .unroll-scroller { display:none; flex:1; min-height:500px; width:100%; overflow-x:auto; overflow-y:hidden; align-items:center; padding:12px 0 22px; scrollbar-width:thin; }
+    .unroll-scroller.show { display:flex; }
+    #unrollSvg { display:block; flex:0 0 auto; height:470px; max-height:470px; }
+    .scale-note { display:none; margin-top:7px; padding:8px 11px; border-radius:12px; background:#f8fafc; border:1px dashed #cbd5e1; color:#64748b; font-size:12px; line-height:1.5; }
+    .scale-note.show { display:block; }
+
+    .circle-main { fill:#f8fbff; stroke:#334155; stroke-width:3; }
+    .circle-circ { fill:none; stroke:var(--orange); stroke-width:8; stroke-linecap:round; }
+    .center-dot { fill:#1e293b; }
+    .radius-line { stroke:var(--blue); stroke-width:4; stroke-linecap:round; }
+    .diameter-line { stroke:var(--purple); stroke-width:4; stroke-linecap:round; }
+    .circle-label { font-size:17px; font-weight:900; paint-order:stroke; stroke:white; stroke-width:5px; stroke-linejoin:round; }
+    .cut-mark { stroke:var(--red); stroke-width:3; stroke-dasharray:5 4; }
+    .scissors { font-size:38px; transform-box:fill-box; transform-origin:center; }
+    .scissors.cut { animation:cutShake .55s ease; }
+    @keyframes cutShake { 0%{transform:rotate(0deg);} 25%{transform:rotate(-14deg);} 50%{transform:rotate(14deg);} 75%{transform:rotate(-8deg);} 100%{transform:rotate(0deg);} }
+
+    .unrolled-main { stroke:var(--orange); stroke-width:10; stroke-linecap:round; }
+    .unrolled-grow { animation:growLine .75s ease; }
+    @keyframes growLine { from{stroke-dasharray:0 2400;} to{stroke-dasharray:2400 0;} }
+    .diameter-stick { stroke:#64748b; stroke-width:13; stroke-linecap:butt; }
+    .diameter-stick.new { animation:stickIn .3s ease; }
+    @keyframes stickIn { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+    .remaining-line { stroke:#cbd5e1; stroke-width:13; stroke-linecap:butt; }
+    .svg-small-label { font-size:14px; font-weight:800; fill:#64748b; }
+    .svg-big-label { font-size:18px; font-weight:900; fill:#334155; }
+
+    .control-section { padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid #edf1f5; }
+    .control-section:last-child { padding-bottom:0; margin-bottom:0; border-bottom:0; }
+    .control-title { font-size:14px; font-weight:900; color:#475569; margin-bottom:10px; }
+    .radius-picker { display:grid; grid-template-columns:48px minmax(0,1fr) 48px; gap:8px; align-items:center; }
+    .round-btn { min-height:48px; border:0; border-radius:14px; background:#eef2ff; color:#4338ca; font-size:24px; font-weight:900; cursor:pointer; }
+    .round-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .radius-input-wrap { display:flex; align-items:center; justify-content:center; gap:5px; min-height:48px; border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:0 10px; }
+    .radius-input { width:84px; border:0; outline:none; text-align:right; font-size:21px; font-weight:900; color:#1e293b; background:transparent; }
+    .unit { font-size:14px; font-weight:800; color:#64748b; }
+    .preset-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+    .preset-btn { border:1px solid #dbe3ed; background:#fff; min-height:38px; border-radius:11px; color:#64748b; font-size:12px; font-weight:900; cursor:pointer; }
+    .preset-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .experiment-count { margin-top:10px; padding:9px 11px; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; color:#64748b; font-size:12px; font-weight:800; line-height:1.5; }
+
+    .btn { appearance:none; border:0; min-height:50px; padding:10px 12px; border-radius:15px; width:100%; cursor:pointer; font-size:14px; font-weight:900; transition:.15s ease; }
+    .btn:active:not(:disabled){transform:scale(.98);} .btn:disabled { opacity:.42; cursor:not-allowed; }
+    .orange { background:linear-gradient(135deg,#f59e0b,#f97316); color:#fff; }
+    .purple { background:linear-gradient(135deg,#7c3aed,#8b5cf6); color:#fff; }
+    .blue { background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; }
+    .green { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .soft { background:#f1f5f9; color:#334155; }
+
+    .info-box { margin-top:9px; padding:12px 13px; border-radius:14px; background:#f8fafc; border:1px solid #e2e8f0; color:#5f6b7c; font-size:13px; line-height:1.6; }
+    .info-box strong { color:#334155; }
+    .measurement-box { display:none; margin-top:10px; padding:13px 14px; border-radius:15px; background:#eff6ff; border:1px solid #bfdbfe; font-size:14px; line-height:1.85; }
+    .measurement-box.show { display:block; }
+    .measure-row { display:flex; justify-content:space-between; gap:8px; }
+    .measure-row strong { color:#1e3a8a; }
+    .ratio-box { display:none; margin-top:11px; padding:15px; border-radius:17px; background:#ecfdf5; border:1px solid #a7f3d0; text-align:center; }
+    .ratio-box.show { display:block; animation:pop .3s ease; }
+    @keyframes pop { from{transform:scale(.96);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .ratio-formula { font-size:14px; color:#496059; margin-bottom:5px; }
+    .ratio-result { font-size:32px; font-weight:900; color:var(--green-dark); letter-spacing:-1px; }
+    .hint-message { display:none; margin-top:9px; padding:9px 11px; border-radius:12px; background:#fff7ed; border:1px solid #fed7aa; color:#9a5b17; font-size:12px; line-height:1.5; }
+    .hint-message.show { display:block; }
+
+    .question { margin-top:15px; padding:17px 18px; border-radius:19px; background:linear-gradient(135deg,#fff7ed,#fffbeb); border:1px solid #fed7aa; }
+    .question b { display:block; color:#c2410c; font-size:13px; margin-bottom:5px; }
+    .question strong { display:block; font-size:17px; line-height:1.55; }
+    .question span { display:block; margin-top:6px; color:#80684e; font-size:12px; line-height:1.55; }
+
+    .results-card { margin-top:16px; padding:21px; }
+    .results-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:13px; }
+    .results-head h2 { margin:0; font-size:21px; letter-spacing:-.7px; }
+    .results-head p { margin:5px 0 0; color:#7a8597; font-size:13px; line-height:1.5; }
+    .clear-btn { border:0; background:#f1f5f9; color:#64748b; min-height:40px; padding:8px 12px; border-radius:11px; cursor:pointer; font-size:12px; font-weight:900; white-space:nowrap; }
+    .table-wrap { width:100%; overflow-x:auto; }
+    table { width:100%; min-width:650px; border-collapse:collapse; font-size:14px; }
+    th,td { padding:12px 10px; border-bottom:1px solid #e2e8f0; text-align:center; }
+    th { background:#f8fafc; color:#475569; font-weight:900; }
+    td { color:#334155; }
+    .empty-row td { padding:25px 10px; color:#94a3b8; }
+    .result-focus { font-weight:900; color:#047857; }
+    .discovery-box { display:none; margin-top:14px; padding:16px 17px; border-radius:17px; background:#eefbf5; border:1px solid #a7f3d0; }
+    .discovery-box.show { display:block; }
+    .discovery-box b { display:block; color:#047857; margin-bottom:5px; }
+    .discovery-box p { margin:0; color:#496059; font-size:14px; line-height:1.65; }
+
+    @media (max-width:830px) { .grid { grid-template-columns:1fr; } .visual-card { min-height:auto; } .circle-workspace { min-height:500px; } }
+    @media (max-width:540px) {
+      .app { width:calc(100% - 12px); padding-top:7px; }
+      .header { padding:18px; border-radius:20px; }
+      .step-bar { gap:3px; }
+      .step-item { min-height:48px; padding:6px 2px; }
+      .step-item span { display:none; }
+      .visual-card { padding:11px; }
+      .circle-workspace { min-height:390px; }
+      .control-card,.results-card { padding:16px; }
+      .results-head { flex-direction:column; }
+      .clear-btn { align-self:flex-end; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  <header class="header">
+    <div class="eyebrow">🔍 원 속에 숨은 숫자를 찾아라</div>
+    <h1>원의 비밀 숫자 탐구실</h1>
+    <p>반지름을 직접 정하고, 원의 둘레를 잘라 펼친 뒤 같은 원의 지름을 놓아 보세요. 서로 다른 크기의 원에서도 비슷하게 나타나는 숫자가 있을까요?</p>
+  </header>
+
+  <div class="step-bar">
+    <div class="step-item active" id="step1"><b>①</b><span>반지름 선택</span></div>
+    <div class="step-item" id="step2"><b>②</b><span>원주 펼치기</span></div>
+    <div class="step-item" id="step3"><b>③</b><span>지름 놓기</span></div>
+    <div class="step-item" id="step4"><b>④</b><span>길이 확인</span></div>
+    <div class="step-item" id="step5"><b>⑤</b><span>비율 계산</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="visual-card">
+      <div class="visual-title" id="visualTitle">① 탐구할 원의 반지름을 선택하세요.</div>
+      <div class="visual-subtitle" id="visualSubtitle">반지름은 1.0 cm부터 15.0 cm까지 0.1 cm 단위로 선택할 수 있습니다.</div>
+
+      <div class="circle-workspace" id="circleWorkspace">
+        <svg id="circleSvg" viewBox="0 0 650 650" aria-label="선택한 반지름의 원">
+          <circle id="circleMain" class="circle-main" cx="325" cy="325" r="90"></circle>
+          <circle id="circleCirc" class="circle-circ" cx="325" cy="325" r="90"></circle>
+          <line id="diameterLine" class="diameter-line"></line>
+          <line id="radiusLine" class="radius-line"></line>
+          <circle cx="325" cy="325" r="7" class="center-dot"></circle>
+          <text id="radiusLabel" class="circle-label" fill="#2563eb" text-anchor="middle">반지름</text>
+          <text id="diameterLabel" class="circle-label" fill="#7c3aed" text-anchor="middle">지름</text>
+          <line id="cutMark" class="cut-mark"></line>
+          <text id="scissors" class="scissors">✂️</text>
+        </svg>
+      </div>
+
+      <div class="unroll-scroller" id="unrollScroller">
+        <svg id="unrollSvg" aria-label="펼친 원주와 지름 비교">
+          <text id="unrollTitle" class="svg-big-label" text-anchor="middle">펼친 원의 둘레</text>
+          <line id="unrolledLine" class="unrolled-main"></line>
+          <g id="sticksGroup"></g>
+          <line id="remainingLine" class="remaining-line" style="display:none;"></line>
+          <text id="remainLabel" class="svg-small-label" text-anchor="middle" style="display:none;">지름 3개를 놓아도 조금 남아요!</text>
+        </svg>
+      </div>
+
+      <div class="scale-note" id="scaleNote">같은 실험에서는 원, 지름, 펼친 원주의 화면 배율을 동일하게 유지합니다. 원주가 화면보다 길면 아래 영역을 좌우로 이동해 확인할 수 있습니다.</div>
+    </div>
+
+    <div class="control-card">
+      <div class="control-section">
+        <div class="control-title">① 반지름 선택</div>
+        <div class="radius-picker">
+          <button class="round-btn" id="minusBtn" type="button" aria-label="반지름 0.1cm 줄이기">−</button>
+          <div class="radius-input-wrap">
+            <input id="radiusInput" class="radius-input" type="number" min="1" max="15" step="0.1" value="5.0" aria-label="반지름">
+            <span class="unit">cm</span>
+          </div>
+          <button class="round-btn" id="plusBtn" type="button" aria-label="반지름 0.1cm 늘리기">＋</button>
+        </div>
+
+        <div class="preset-row">
+          <button class="preset-btn" type="button" data-radius="3">3.0 cm</button>
+          <button class="preset-btn" type="button" data-radius="5">5.0 cm</button>
+          <button class="preset-btn" type="button" data-radius="10">10.0 cm</button>
+          <button class="preset-btn" type="button" data-radius="15">15.0 cm</button>
+        </div>
+
+        <div class="experiment-count" id="experimentCount">아직 완료한 탐구가 없습니다. 서로 다른 크기의 원을 3개 이상 탐구해 보세요.</div>
+        <div class="hint-message" id="repeatHint">💡 이미 탐구한 반지름입니다. 다른 크기의 원도 탐구해 보세요.</div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-title">② 원의 둘레를 잘라 펼치기</div>
+        <button class="btn orange" id="cutBtn" type="button">✂️ 원의 둘레를 잘라 펼쳐보기</button>
+      </div>
+
+      <div class="control-section">
+        <div class="control-title">③ 같은 원의 지름 놓기</div>
+        <button class="btn purple" id="placeBtn" type="button" disabled>＋ 지름 하나 놓기</button>
+        <div class="info-box" id="stickInfo">원의 둘레를 먼저 펼쳐 보세요.</div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-title">④ 길이 확인</div>
+        <button class="btn blue" id="measureBtn" type="button" disabled>📏 길이 확인하기</button>
+        <div class="measurement-box" id="measurementBox">
+          <div class="measure-row"><span>반지름</span><strong id="radiusValue"></strong></div>
+          <div class="measure-row"><span>지름</span><strong id="diameterValue"></strong></div>
+          <div class="measure-row"><span>원의 둘레</span><strong id="circValue"></strong></div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-title">⑤ 원의 둘레 ÷ 지름</div>
+        <button class="btn green" id="ratioBtn" type="button" disabled>원의 둘레 ÷ 지름 계산하기</button>
+        <div class="ratio-box" id="ratioBox">
+          <div class="ratio-formula" id="ratioFormula"></div>
+          <div class="ratio-result" id="ratioResult"></div>
+        </div>
+        <button class="btn soft" id="newCircleBtn" type="button" style="margin-top:9px;">↺ 새로운 반지름으로 다시 탐구</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="question">
+    <b>✏️ 관찰하기</b>
+    <strong>원의 크기가 달라졌을 때 「원의 둘레 ÷ 지름」의 값은 어떻게 되었나요?</strong>
+    <span>원주율이라는 이름은 아직 생각하지 말고, 먼저 아래 탐구 기록에서 공통점을 찾아보세요.</span>
+  </div>
+
+  <section class="results-card">
+    <div class="results-head">
+      <div>
+        <h2>나의 탐구 결과</h2>
+        <p>비율 계산을 완료하면 결과가 자동으로 한 줄씩 기록됩니다.</p>
+      </div>
+      <button class="clear-btn" id="clearResultsBtn" type="button">기록 모두 지우기</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>실험</th><th>반지름</th><th>지름</th><th>원의 둘레</th><th>원주 ÷ 지름</th></tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr class="empty-row"><td colspan="5">아직 기록된 탐구 결과가 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="discovery-box" id="discoveryBox">
+      <b>🔍 세 결과를 비교해 보세요.</b>
+      <p>원의 크기는 달라졌는데, 어떤 값들이 서로 비슷한가요? 발견한 내용을 학습지에 자신의 말로 정리해 보세요.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const MIN_R = 1.0, MAX_R = 15.0, STEP_R = 0.1;
+  const PX_PER_CM = 18;
+  const circleCx = 325, circleCy = 325;
+
+  let radius = 5.0;
+  let stage = 1;
+  let placedSticks = 0;
+  let measured = false;
+  let records = [];
+  let currentRecorded = false;
+
+  const radiusInput = document.getElementById('radiusInput');
+  const minusBtn = document.getElementById('minusBtn');
+  const plusBtn = document.getElementById('plusBtn');
+  const presetBtns = [...document.querySelectorAll('.preset-btn')];
+  const experimentCount = document.getElementById('experimentCount');
+  const repeatHint = document.getElementById('repeatHint');
+  const circleWorkspace = document.getElementById('circleWorkspace');
+  const unrollScroller = document.getElementById('unrollScroller');
+  const scaleNote = document.getElementById('scaleNote');
+  const circleMain = document.getElementById('circleMain');
+  const circleCirc = document.getElementById('circleCirc');
+  const diameterLine = document.getElementById('diameterLine');
+  const radiusLine = document.getElementById('radiusLine');
+  const radiusLabel = document.getElementById('radiusLabel');
+  const diameterLabel = document.getElementById('diameterLabel');
+  const cutMark = document.getElementById('cutMark');
+  const scissors = document.getElementById('scissors');
+  const unrollSvg = document.getElementById('unrollSvg');
+  const unrollTitle = document.getElementById('unrollTitle');
+  const unrolledLine = document.getElementById('unrolledLine');
+  const sticksGroup = document.getElementById('sticksGroup');
+  const remainingLine = document.getElementById('remainingLine');
+  const remainLabel = document.getElementById('remainLabel');
+  const cutBtn = document.getElementById('cutBtn');
+  const placeBtn = document.getElementById('placeBtn');
+  const stickInfo = document.getElementById('stickInfo');
+  const measureBtn = document.getElementById('measureBtn');
+  const measurementBox = document.getElementById('measurementBox');
+  const radiusValue = document.getElementById('radiusValue');
+  const diameterValue = document.getElementById('diameterValue');
+  const circValue = document.getElementById('circValue');
+  const ratioBtn = document.getElementById('ratioBtn');
+  const ratioBox = document.getElementById('ratioBox');
+  const ratioFormula = document.getElementById('ratioFormula');
+  const ratioResult = document.getElementById('ratioResult');
+  const newCircleBtn = document.getElementById('newCircleBtn');
+  const visualTitle = document.getElementById('visualTitle');
+  const visualSubtitle = document.getElementById('visualSubtitle');
+  const resultsBody = document.getElementById('resultsBody');
+  const discoveryBox = document.getElementById('discoveryBox');
+  const clearResultsBtn = document.getElementById('clearResultsBtn');
+
+  function clampRadius(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return radius;
+    const clamped = Math.min(MAX_R, Math.max(MIN_R, n));
+    return Math.round(clamped * 10) / 10;
+  }
+
+  function diameterCm() { return Math.round(radius * 2 * 10) / 10; }
+  function circumferenceMeasuredCm() { return Math.round((2 * Math.PI * radius) * 10) / 10; }
+  function ratioValue() { return circumferenceMeasuredCm() / diameterCm(); }
+  function radiusPx() { return radius * PX_PER_CM; }
+  function diameterPx() { return diameterCm() * PX_PER_CM; }
+  function circumferencePx() { return (2 * Math.PI * radius) * PX_PER_CM; }
+
+  function updateSteps() {
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('step' + i);
+      el.classList.remove('active','done');
+      if (i < stage) el.classList.add('done');
+      if (i === stage) el.classList.add('active');
+    }
+  }
+
+  function updateExperimentCount() {
+    const unique = new Set(records.map(r => r.radius.toFixed(1))).size;
+    if (records.length === 0) {
+      experimentCount.textContent = '아직 완료한 탐구가 없습니다. 서로 다른 크기의 원을 3개 이상 탐구해 보세요.';
+    } else if (unique < 3) {
+      experimentCount.textContent = `완료한 탐구 ${records.length}회 · 서로 다른 반지름 ${unique}개 / 3개`;
+    } else {
+      experimentCount.textContent = `✅ 서로 다른 크기의 원 ${unique}개를 탐구했습니다. 더 탐구해도 좋아요.`;
+    }
+    discoveryBox.classList.toggle('show', unique >= 3);
+  }
+
+  function checkRepeatedRadius() {
+    const repeated = records.some(r => r.radius.toFixed(1) === radius.toFixed(1));
+    repeatHint.classList.toggle('show', repeated && !currentRecorded);
+  }
+
+  function setRadius(value) {
+    if (stage !== 1) return;
+    radius = clampRadius(value);
+    radiusInput.value = radius.toFixed(1);
+    minusBtn.disabled = radius <= MIN_R;
+    plusBtn.disabled = radius >= MAX_R;
+    drawCircle();
+    checkRepeatedRadius();
+  }
+
+  function drawCircle() {
+    const r = radiusPx();
+    circleMain.setAttribute('r', r);
+    circleCirc.setAttribute('r', r);
+
+    diameterLine.setAttribute('x1', circleCx - r);
+    diameterLine.setAttribute('y1', circleCy);
+    diameterLine.setAttribute('x2', circleCx + r);
+    diameterLine.setAttribute('y2', circleCy);
+
+    const angle = -35 * Math.PI / 180;
+    const rx = circleCx + r * Math.cos(angle);
+    const ry = circleCy + r * Math.sin(angle);
+
+    radiusLine.setAttribute('x1', circleCx);
+    radiusLine.setAttribute('y1', circleCy);
+    radiusLine.setAttribute('x2', rx);
+    radiusLine.setAttribute('y2', ry);
+
+    const labelRatio = r < 55 ? 1.65 : 0.62;
+    radiusLabel.setAttribute('x', circleCx + r * labelRatio * Math.cos(angle));
+    radiusLabel.setAttribute('y', circleCy + r * labelRatio * Math.sin(angle) - 7);
+    radiusLabel.textContent = `반지름 ${radius.toFixed(1)} cm`;
+
+    diameterLabel.setAttribute('x', circleCx);
+    diameterLabel.setAttribute('y', circleCy + Math.min(34, Math.max(24, r * .25)));
+    diameterLabel.textContent = '지름';
+
+    const cutAngle = -55 * Math.PI / 180;
+    const cutX = circleCx + r * Math.cos(cutAngle);
+    const cutY = circleCy + r * Math.sin(cutAngle);
+
+    cutMark.setAttribute('x1', cutX - 11);
+    cutMark.setAttribute('y1', cutY - 11);
+    cutMark.setAttribute('x2', cutX + 11);
+    cutMark.setAttribute('y2', cutY + 11);
+    scissors.setAttribute('x', cutX + 10);
+    scissors.setAttribute('y', cutY - 10);
+
+    visualSubtitle.textContent = `선택한 반지름은 ${radius.toFixed(1)} cm입니다. 원의 테두리를 잘라 펼치면 얼마나 길어질까요?`;
+  }
+
+  function drawUnrolled() {
+    const cPx = circumferencePx();
+    const paddingX = 65;
+    const svgWidth = Math.max(650, cPx + paddingX * 2);
+    const svgHeight = 470;
+
+    unrollSvg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+    unrollSvg.setAttribute('width', svgWidth);
+    unrollSvg.setAttribute('height', svgHeight);
+    unrollSvg.style.width = svgWidth + 'px';
+
+    const startX = (svgWidth - cPx) / 2;
+    const endX = startX + cPx;
+
+    unrollTitle.setAttribute('x', svgWidth / 2);
+    unrollTitle.setAttribute('y', 82);
+    unrolledLine.setAttribute('x1', startX);
+    unrolledLine.setAttribute('y1', 145);
+    unrolledLine.setAttribute('x2', endX);
+    unrolledLine.setAttribute('y2', 145);
+
+    unrolledLine.classList.remove('unrolled-grow');
+    void unrolledLine.getBoundingClientRect();
+    unrolledLine.classList.add('unrolled-grow');
+
+    drawDiameterSticks(false);
+
+    requestAnimationFrame(() => {
+      unrollScroller.scrollLeft = Math.max(0, (svgWidth - unrollScroller.clientWidth) / 2);
+    });
+  }
+
+  function drawDiameterSticks(animateLast = false) {
+    sticksGroup.innerHTML = '';
+
+    const cPx = circumferencePx();
+    const dPx = diameterPx();
+    const svgWidth = Number(unrollSvg.getAttribute('width')) || 650;
+    const startX = (svgWidth - cPx) / 2;
+    const y = 265;
+
+    for (let i = 0; i < placedSticks; i++) {
+      const line = document.createElementNS(SVG_NS,'line');
+      line.setAttribute('x1', startX + i * dPx);
+      line.setAttribute('x2', startX + (i + 1) * dPx);
+      line.setAttribute('y1', y);
+      line.setAttribute('y2', y);
+      line.setAttribute('class','diameter-stick' + (animateLast && i === placedSticks - 1 ? ' new' : ''));
+      sticksGroup.appendChild(line);
+
+      const label = document.createElementNS(SVG_NS,'text');
+      label.setAttribute('x', startX + (i + .5) * dPx);
+      label.setAttribute('y', y + 34);
+      label.setAttribute('text-anchor','middle');
+      label.setAttribute('class','svg-small-label');
+      label.textContent = '지름';
+      sticksGroup.appendChild(label);
+    }
+
+    if (placedSticks >= 3) {
+      const remStart = startX + 3 * dPx;
+      const remEnd = startX + cPx;
+      remainingLine.style.display = 'block';
+      remainingLine.setAttribute('x1', remStart);
+      remainingLine.setAttribute('y1', y);
+      remainingLine.setAttribute('x2', remEnd);
+      remainingLine.setAttribute('y2', y);
+      remainLabel.style.display = 'block';
+      remainLabel.setAttribute('x', (remStart + remEnd) / 2);
+      remainLabel.setAttribute('y', 340);
+      remainLabel.textContent = '지름 3개를 놓아도 조금 남아요!';
+    } else {
+      remainingLine.style.display = 'none';
+      remainLabel.style.display = 'none';
+    }
+  }
+
+  function renderResults() {
+    if (records.length === 0) {
+      resultsBody.innerHTML = '<tr class="empty-row"><td colspan="5">아직 기록된 탐구 결과가 없습니다.</td></tr>';
+      updateExperimentCount();
+      return;
+    }
+
+    resultsBody.innerHTML = records.map((r,index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${r.radius.toFixed(1)} cm</td>
+        <td>${r.diameter.toFixed(1)} cm</td>
+        <td>${r.circumference.toFixed(1)} cm</td>
+        <td class="result-focus">${r.ratio.toFixed(3)}</td>
+      </tr>`).join('');
+
+    updateExperimentCount();
+  }
+
+  function recordCurrentResult() {
+    if (currentRecorded) return;
+    records.push({ radius, diameter:diameterCm(), circumference:circumferenceMeasuredCm(), ratio:ratioValue() });
+    currentRecorded = true;
+    renderResults();
+  }
+
+  function lockRadiusControls(locked) {
+    radiusInput.disabled = locked;
+    minusBtn.disabled = locked || radius <= MIN_R;
+    plusBtn.disabled = locked || radius >= MAX_R;
+    presetBtns.forEach(btn => btn.disabled = locked);
+  }
+
+  function resetExperiment() {
+    stage = 1;
+    placedSticks = 0;
+    measured = false;
+    currentRecorded = false;
+
+    circleWorkspace.style.display = 'flex';
+    unrollScroller.classList.remove('show');
+    scaleNote.classList.remove('show');
+    lockRadiusControls(false);
+
+    cutBtn.disabled = false;
+    placeBtn.disabled = true;
+    measureBtn.disabled = true;
+    ratioBtn.disabled = true;
+
+    measurementBox.classList.remove('show');
+    ratioBox.classList.remove('show');
+    stickInfo.innerHTML = '원의 둘레를 먼저 펼쳐 보세요.';
+    visualTitle.textContent = '① 탐구할 원의 반지름을 선택하세요.';
+    remainingLine.style.display = 'none';
+    remainLabel.style.display = 'none';
+    sticksGroup.innerHTML = '';
+
+    drawCircle();
+    updateSteps();
+    checkRepeatedRadius();
+  }
+
+  minusBtn.addEventListener('click', () => setRadius(radius - STEP_R));
+  plusBtn.addEventListener('click', () => setRadius(radius + STEP_R));
+  radiusInput.addEventListener('change', () => setRadius(radiusInput.value));
+  radiusInput.addEventListener('blur', () => { radiusInput.value = radius.toFixed(1); });
+  presetBtns.forEach(btn => btn.addEventListener('click', () => setRadius(Number(btn.dataset.radius))));
+
+  cutBtn.addEventListener('click', () => {
+    if (stage !== 1) return;
+
+    scissors.classList.add('cut');
+    cutBtn.disabled = true;
+    lockRadiusControls(true);
+
+    setTimeout(() => {
+      scissors.classList.remove('cut');
+      circleWorkspace.style.display = 'none';
+      unrollScroller.classList.add('show');
+      scaleNote.classList.add('show');
+      stage = 2;
+      updateSteps();
+      drawUnrolled();
+      visualTitle.textContent = '② 원의 둘레를 잘라 일직선으로 펼쳤습니다.';
+      visualSubtitle.textContent = '원에서 보았던 지름과 같은 화면 배율의 지름을 펼친 원주 아래에 놓아 보세요.';
+      placeBtn.disabled = false;
+      stickInfo.innerHTML = '<strong>몇 개의 지름이 들어갈지 먼저 예상해 보세요.</strong>';
+    },500);
+  });
+
+  placeBtn.addEventListener('click', () => {
+    if (placedSticks >= 3) return;
+    placedSticks++;
+    stage = 3;
+    updateSteps();
+    drawDiameterSticks(true);
+
+    if (placedSticks === 1) {
+      stickInfo.innerHTML = '<strong>지름 1개</strong>를 놓았습니다.';
+    } else if (placedSticks === 2) {
+      stickInfo.innerHTML = '<strong>지름 2개</strong>를 놓았습니다. 아직 많이 남아 있습니다.';
+    } else {
+      stickInfo.innerHTML = '<strong>지름 3개</strong>를 놓았는데도 조금 남았습니다.<br>남은 부분은 지름의 몇 배 정도일까요?';
+      placeBtn.disabled = true;
+      measureBtn.disabled = false;
+      visualTitle.textContent = '③ 지름 3개를 놓았는데도 조금 남습니다.';
+      visualSubtitle.textContent = '숫자를 보기 전에 원의 둘레가 지름의 몇 배쯤인지 먼저 예상해 보세요.';
+    }
+  });
+
+  measureBtn.addEventListener('click', () => {
+    measured = true;
+    stage = 4;
+    updateSteps();
+    radiusValue.textContent = radius.toFixed(1) + ' cm';
+    diameterValue.textContent = diameterCm().toFixed(1) + ' cm';
+    circValue.textContent = circumferenceMeasuredCm().toFixed(1) + ' cm';
+    measurementBox.classList.add('show');
+    measureBtn.disabled = true;
+    ratioBtn.disabled = false;
+    visualTitle.textContent = '④ 길이를 확인했습니다.';
+    visualSubtitle.textContent = '이제 원의 둘레를 지름으로 나누면 어떤 값이 나오는지 확인해 보세요.';
+  });
+
+  ratioBtn.addEventListener('click', () => {
+    if (!measured) return;
+    stage = 5;
+    updateSteps();
+    const d = diameterCm();
+    const c = circumferenceMeasuredCm();
+    const ratio = ratioValue();
+    ratioFormula.textContent = `${c.toFixed(1)} ÷ ${d.toFixed(1)}`;
+    ratioResult.textContent = ratio.toFixed(3);
+    ratioBox.classList.add('show');
+    ratioBtn.disabled = true;
+    recordCurrentResult();
+    visualTitle.textContent = '⑤ 탐구 결과를 아래 표에 기록했습니다.';
+    visualSubtitle.textContent = '다른 반지름을 선택하여 같은 실험을 반복하고, 계산 결과를 비교해 보세요.';
+  });
+
+  newCircleBtn.addEventListener('click', resetExperiment);
+  clearResultsBtn.addEventListener('click', () => {
+    records = [];
+    renderResults();
+    checkRepeatedRadius();
+  });
+
+  setRadius(5.0);
+  renderResults();
+  updateSteps();
+})();
+</script>
+</body>
+</html>
